@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    
+    <title>Node.js Express Save Data from Html Form to Mysql Database - Tutsmake.com</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="index.css">
+  </head>
+  <body>
+    <div class="container mt-4">
+      <div class="card">
+        <div class="card-body">
+ 
+          <form action="http://localhost:8005/pets/StevenIsAwesome!" method="POST">
+            <div class="form-group">
+              <label for="age">Age</label>
+              <input type="number" class="form-control col-lg-9" id="age" name="age">
+            </div>
+            <div class="form-group">
+              <label for="kind">Kind</label>
+              <input type="text" class="form-control col-lg-9" id="kind"  name="kind">
+            </div>
+            <div class="form-group">
+              <label for="name">Name</label>
+              <input type="text" class="form-control col-lg-9" id="name" name="name">
+            </div>        
+            <button type="button" class="btn btn-primary" id="button">Submit</button>
+          </form>
+    </div>
+  </div>
+  <div id="petsTable"></div>
+  </body>
+  <script src="index.js"></script>
+</html>
