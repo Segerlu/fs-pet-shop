@@ -1,0 +1,11 @@
+{
+    "dev":{
+        "connectionString":"postgresql://postgres:docker@127.0.0.1:5432/petshopdb"
+    },
+    "test":{
+        "connectionString":"postgresql://postgres:docker@10.10.10.10:5432/petshopdb"
+    },
+    "passcode":{
+        "password":"StevenIsAwesome!"
+    }
+}

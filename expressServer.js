@@ -1,81 +1,113 @@
-import fs from "fs"
 import express from "express"
-import path from "path"
-import http from "http"
+import pkg from 'pg';
+const { Client } = pkg;
+import con from './config.json' assert { type: 'json' }
+const config = con[process.env.NODE_ENV || 'dev'];
+const connectionString = config.connectionString;
+let secretCode = con['passcode'].password;
+
+const client = new Client({
+    connectionString: connectionString,
+});
+client.connect();
+
 let app = express();
 app.use(express.json());
+
 const port = 8005;
 
-app.get('/pets', (req, res) => {
-    fs.readFile('pets.json', 'utf-8', (error, data) => {
-        if (error) {
-            console.log('Unable to read file', error);
-            res.status(500);
-            res.type("html");
-            res.end("Internal Server Error");
-        }
-        res.type('json');
-        res.end(data);
-    })
+app.get('/', (req, res) => {
+    res.post("Welcome to my petshop!");
 })
 
-app.get('/pets/:id', (req, res) => {
-    fs.readFile('pets.json', 'utf-8', (error, data) => {
-        if (error) {
-            console.log('Unable to read file', error);
+app.get('/pets/:passcode', (req, res) => {
+
+    let passcode = req.params.passcode;
+
+    if (passcode === secretCode) {
+        client.query('SELECT * FROM pets;')
+            .then(result => {
+                res.send(result.rows);
+            })
+    } else {
+        res.status(401);
+        res.send("YOU ARE NOT AUTHORIZED TO SEE MY PETS!")
+    }
+
+})
+
+app.get('/pets/:passcode/:id', (req, res) => {
+
+    let id = Number(req.params.id);
+    let passcode = req.params.passcode;
+
+    if (passcode === secretCode) {
+
+        if (Number(id)) {
+            client.query(`SELECT * FROM pets WHERE pets_id = ${id};`)
+                .then(result => {
+                    if (result.rows.length > 0) {
+                        res.send(result.rows);
+                    } else {
+                        res.status(404, res.send("Pet not found!"))
+                    }
+
+                })
+        } else {
+            res.status(500, console.log("Internal Server Error"))
+            res.send("Internal Server Error")
+        }
+    } else {
+        res.status(401);
+        res.send("YOU ARE NOT AUTHORIZED TO SEE THIS PET!")
+    }
+
+
+})
+
+app.post('/pets/:passcode/', (req, res) => {
+    let newPet = req.body;
+    console.log(newPet)
+    let passcode = req.params.passcode;
+
+    if (passcode === secretCode) {
+
+        if (!newPet) {
+            res.send(newPet)
+            return;
+        }
+        if (Object.keys(newPet).length === 3 && newPet.age && newPet.kind && newPet.name && typeof newPet.age === "number") {
+            client.query(`INSERT INTO pets (pets_age, pets_kind, pets_name) 
+        VALUES ('${newPet.age}', '${newPet.kind}', '${newPet.name}');`)
+            res.send("pet added")
+        } else {
+            console.log('Invalid Pet');
             res.status(500);
             res.type("html");
-            res.end("Internal Server Error");
+            res.end("Invalid pet");
         }
-        let dataAr = JSON.parse(data);
-        
-        let arUrl = req.params.id;
-
-        if (arUrl < dataAr.length && arUrl >= 0) {
-            res.status(200);
-            res.type('json');
-            res.end(JSON.stringify(dataAr[arUrl]));
-        } else {
-            res.type("html");
-            res.status(404);
-            res.end("Pet not found");
-        }
-
-    })
-}) 
-
-app.post('/pets', (req, res) => {
-    let newPet = req.body;
-
-    if (Object.keys(newPet).length === 3 && newPet.age && newPet.kind && newPet.name && typeof newPet.age === "number") {
-
-        fs.readFile('pets.json', 'utf-8', (error, data) => {
-            if (error) {
-                console.log('Unable to read file', error);
-                res.status(500);
-                res.type("html");
-                res.end("Internal Server Error");
-            }
-            res.type('json');
-            data = JSON.parse(data);
-            data.push(newPet);
-            data = JSON.stringify(data);
-
-            fs.writeFile('./pets.json', data, function (error) {
-                if (error) {
-                    console.log(error)
-                }
-                console.log('it worked');
-            })
-
-            res.end(data);
-        })
     } else {
-                console.log('Invalid Pet');
-                res.status(500);
-                res.type("html");
-                res.end("Invalid pet");
+
+
+        res.status(401);
+        res.send("YOU ARE NOT AUTHORIZED TO SEE THIS PET!")
     }
+})
+
+app.get('/pets/delete/:passcode/:id/', (req, res) => {
+
+    let passcode = req.params.passcode;
+    let id = Number(req.params.id);
+
+    if (passcode === secretCode) {
+        client.query(`DELETE FROM pets WHERE pets_id = '${id}';`)
+            .then(result => {
+                res.send("pet deleted");
+            })
+    } else {
+        res.send("YOU ARE NOT AUTHORIZED TO SEE MY PETS!")
+    }
+
 })
 
 app.listen(port, () => {

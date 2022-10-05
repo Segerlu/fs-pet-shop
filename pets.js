@@ -1,4 +1,4 @@
-import fs from "fs"
+let fs = require("fs") 
 import { argv } from "node:process";
 let crud = '';
 if (process.argv.length > 2) {
